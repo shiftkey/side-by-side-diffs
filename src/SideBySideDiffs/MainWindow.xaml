@@ -5,8 +5,8 @@
         Title="MainWindow" Height="350" Width="525">
     <Window.Resources>
         <Style TargetType="avalonedit:TextEditor">
-            <Setter Property="HorizontalScrollBarVisibility" Value="Hidden"/>
-            <Setter Property="VerticalScrollBarVisibility" Value="Hidden"/>
+            <!--<Setter Property="HorizontalScrollBarVisibility" Value="Hidden"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Hidden"/>-->
         </Style>
     </Window.Resources>
     <Grid x:Name="rootGrid">    

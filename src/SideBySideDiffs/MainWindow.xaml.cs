@@ -56,12 +56,8 @@ namespace SideBySideDiffs
             var rightMargin = new DiffInfoMargin { Lines = rightPanel };
             right.TextArea.LeftMargins.Add(rightMargin);
 
-
             var leftText = String.Join("\r\n", leftPanelContents);
             var rightText = String.Join("\r\n", rightPanelContents);
-
-
-
 
             left.Text = leftText;
             right.Text = rightText;
@@ -93,12 +89,25 @@ namespace SideBySideDiffs
         {
             var viewModel = new DiffLineViewModel();
             viewModel.RowNumber = index;
-            viewModel.Text = s;
-            viewModel.Context = s.StartsWith("+ ")
-                ? DiffContext.Add
-                : s.StartsWith("- ")
-                    ? DiffContext.Remove
-                    : DiffContext.Context;
+
+            if (s.StartsWith("+ "))
+            {
+                viewModel.Context = DiffContext.Add;
+                viewModel.PrefixForStyle = "+ ";
+                viewModel.Text = s.Substring(2);
+            }
+            else if (s.StartsWith("- "))
+            {
+                viewModel.Context = DiffContext.Remove;
+                viewModel.PrefixForStyle = "- ";
+                viewModel.Text = s.Substring(2);
+            }
+            else
+            {
+                viewModel.Context = DiffContext.Context;
+                viewModel.PrefixForStyle = "";
+                viewModel.Text = s;
+            }
 
             return viewModel;
         }
