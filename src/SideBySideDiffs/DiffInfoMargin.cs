@@ -61,7 +61,7 @@ namespace SideBySideDiffs
             base.OnRender(drawingContext);
             if (Lines == null || Lines.Count == 0) return;
 
-            var lineNumberWidth = Math.Round(_lineFt.Width * 2.0 + TextHorizontalMargin * 3.0);
+            var lineNumberWidth = Math.Round(_lineFt.Width + TextHorizontalMargin * 2.0);
 
             var tf = CreateTypeface();
             var fontSize = (double)GetValue(TextBlock.FontSizeProperty);
@@ -88,14 +88,16 @@ namespace SideBySideDiffs
                     drawingContext.DrawText(ft, new Point(left, rcs[0].Top));
                 }
 
-                var prefix = diffLine.PrefixForStyle;
-                ft = new FormattedText(prefix,
-                    CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-                    tf, fontSize, (Brush)TextView.GetValue(Control.ForegroundProperty));
+                if (diffLine.PrefixForStyle != "")
+                {
+                    var prefix = diffLine.PrefixForStyle;
+                    ft = new FormattedText(prefix,
+                        CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                        tf, fontSize, (Brush)TextView.GetValue(Control.ForegroundProperty));
 
-                drawingContext.DrawText(ft, new Point(lineNumberWidth + TextHorizontalMargin, rcs[0].Top));
+                    drawingContext.DrawText(ft, new Point(lineNumberWidth + TextHorizontalMargin, rcs[0].Top));
+                }
             }
-
         }
 
         public List<DiffLineViewModel> Lines { get; set; }

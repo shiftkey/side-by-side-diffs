@@ -4,17 +4,40 @@
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         Title="MainWindow" Height="350" Width="525">
     <Window.Resources>
+        <ControlTemplate x:Key="TextEditorControlTemplate" TargetType="{x:Type avalonedit:TextEditor}">
+            <ContentControl
+                            Focusable="False"
+                            Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TextArea}"
+                            VerticalContentAlignment="Top"
+                            HorizontalContentAlignment="Left"
+                            Background="{TemplateBinding Background}"
+                            Padding="{TemplateBinding Padding}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" />
+        </ControlTemplate>
+
         <Style TargetType="avalonedit:TextEditor">
-            <!--<Setter Property="HorizontalScrollBarVisibility" Value="Hidden"/>
-            <Setter Property="VerticalScrollBarVisibility" Value="Hidden"/>-->
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="10pt"/>
+            <Setter Property="WordWrap" Value="True"/>
+            <Setter Property="Margin" Value="0,0,0,-15"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="FlowDirection" Value="LeftToRight"/>
+            <!-- AvalonEdit does not support RTL, so ensure we use LTR by default -->
+            <Setter Property="Template" Value="{StaticResource TextEditorControlTemplate}" />
         </Style>
     </Window.Resources>
-    <Grid x:Name="rootGrid">    
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <avalonedit:TextEditor x:Name="left"/>
-        <avalonedit:TextEditor x:Name="right" Grid.Column="1" />
-    </Grid>
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <Grid x:Name="rootGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <avalonedit:TextEditor x:Name="left"/>
+            <avalonedit:TextEditor x:Name="right" Grid.Column="1" />
+        </Grid>
+    </ScrollViewer>
 </Window>
