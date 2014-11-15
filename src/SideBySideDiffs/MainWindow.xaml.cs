@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -41,13 +42,17 @@ namespace SideBySideDiffs
             var leftPanelContents = allLines.Select(StripNewValues).ToArray();
             var rightPanelContents = allLines.Select(StripOldValues).ToArray();
 
-            var rowNumbers = Enumerable.Range(1, allLines.Length).ToArray();
+            var rowNumbersLeft = leftPanelContents.Scan(0,
+                (prev, s) => s != "" ? prev + 1 : prev);
 
-            var leftPanel = leftPanelContents.Zip(rowNumbers, (s, i) => new {Item = s, Index = i})
+            var leftPanel = leftPanelContents.Zip(rowNumbersLeft, (s, i) => new { Item = s, Index = i })
                              .Select(x => CreateRowModel(x.Index, x.Item))
                              .ToList();
 
-            var rightPanel = rightPanelContents.Zip(rowNumbers, (s, i) => new {Item = s, Index = i})
+            var rowNumbersRight = rightPanelContents.Scan(0,
+                (prev, s) => s != "" ? prev + 1 : prev);
+
+            var rightPanel = rightPanelContents.Zip(rowNumbersRight, (s, i) => new { Item = s, Index = i })
                          .Select(x => CreateRowModel(x.Index, x.Item))
                          .ToList();
 
@@ -117,5 +122,21 @@ namespace SideBySideDiffs
 
             return viewModel;
         }
+    }
+
+    public static class LinqExtensions
+    {
+        // http://stackoverflow.com/a/7403212/1363815
+        public static IEnumerable<TAccumulate> Scan<TSource, TAccumulate>(this IEnumerable<TSource> source,
+            TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> accumulator)
+        {
+
+            foreach (var item in source)
+            {
+                seed = accumulator(seed, item);
+                yield return seed;
+            }
+        }
+
     }
 }
