@@ -38,8 +38,8 @@ namespace SideBySideDiffs
 
             var allLines = diffContents.Split(new[] { "\r\n" }, StringSplitOptions.None);
 
-            var leftPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("- ")).ToArray();
-            var rightPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("+ ")).ToArray();
+            var leftPanelContents = allLines.Select(x => StripNewValues(x)).ToArray();
+            var rightPanelContents = allLines.Select(x => StripOldValues(x)).ToArray();
 
             var leftPanel = leftPanelContents.Select(x => new { Item = x, Index = Array.IndexOf(leftPanelContents, x) })
                              .Select(x => CreateRowModel(x.Index, x.Item))
@@ -71,6 +71,22 @@ namespace SideBySideDiffs
             // TODO: parse the strings into proper domain objects
             // TODO: introduce line highlighting
             // TODO: introduce highlighting specific sections
+        }
+
+        static string StripOldValues(string s)
+        {
+            if (s.StartsWith("- "))
+                return "";
+
+            return s;
+        }
+
+        static string StripNewValues(string s)
+        {
+            if (s.StartsWith("+ "))
+                return "";
+
+            return s;
         }
 
         static DiffLineViewModel CreateRowModel(int index, string s)
