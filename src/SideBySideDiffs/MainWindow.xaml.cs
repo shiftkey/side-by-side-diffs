@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
@@ -18,7 +19,7 @@ namespace SideBySideDiffs
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // this is the format you can use to generate a "good enough" raw diff
-            // $ git difftool HEAD~1 -y -x "diff --old-line-format=\"%dn: - %L\" --new-line-format=\"%dn: + %L\" --unchanged-line-format=\"%dn:   %L\"" > output.txt
+            // $ git difftool HEAD~1 -y -x "diff --old-line-format=\"- %L\" --new-line-format=\"+ %L\" --unchanged-line-format=\"  %L\"" > output.txt
 
             string diffContents = "";
 
@@ -34,11 +35,20 @@ namespace SideBySideDiffs
 
             diffContents = diffContents.Replace("\r\r\n", "\r\n");
 
+            var allLines = diffContents.Split(new[] {"\r\n"}, StringSplitOptions.None);
 
-            left.Text = diffContents;
-            right.Text = diffContents;
+            var leftPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("- ")).ToArray();
+            var rightPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("+ ")).ToArray();
 
-            // TODO: split this into left and right pieces
+            var leftText = String.Join("\r\n", leftPanelContents);
+            var rightText = String.Join("\r\n", rightPanelContents);
+
+
+
+
+            left.Text = leftText;
+            right.Text = rightText;
+
             // TODO: bind this to the page
             // TODO: style this mofo
             // TODO: parse the strings into proper domain objects
