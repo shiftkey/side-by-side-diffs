@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SideBySideDiffs
 {
@@ -13,6 +14,17 @@ namespace SideBySideDiffs
             {
                 seed = accumulator(seed, item);
                 yield return seed;
+            }
+        }
+
+        public static IEnumerable<TSource> Scan<TSource>(this IEnumerable<TSource> source,
+                Func<TSource, TSource, TSource> accumulator)
+        {
+            var previous = source.FirstOrDefault();
+            foreach (var item in source.Skip(1))
+            {
+                previous = accumulator(previous, item);
+                yield return previous;
             }
         }
 

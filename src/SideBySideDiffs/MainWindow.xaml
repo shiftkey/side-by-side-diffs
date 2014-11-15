@@ -36,8 +36,6 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <avalonedit:TextEditor x:Name="left"/>
-            <avalonedit:TextEditor x:Name="right" Grid.Column="1" />
         </Grid>
     </ScrollViewer>
 </Window>

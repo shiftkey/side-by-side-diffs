@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 
 namespace SideBySideDiffs
 {
@@ -15,22 +14,22 @@ namespace SideBySideDiffs
             var viewModel = new DiffLineViewModel();
             viewModel.LineNumber = lineNumber;
 
-            if (s.StartsWith("+ "))
+            if (s.StartsWith("+"))
             {
                 viewModel.Style = DiffContext.Added;
-                viewModel.PrefixForStyle = "+ ";
-                viewModel.Text = s.Substring(2);
+                viewModel.PrefixForStyle = "+";
+                viewModel.Text = s.Substring(1);
             }
-            else if (s.StartsWith("- "))
+            else if (s.StartsWith("-"))
             {
                 viewModel.Style = DiffContext.Deleted;
-                viewModel.PrefixForStyle = "- ";
-                viewModel.Text = s.Substring(2);
+                viewModel.PrefixForStyle = "-";
+                viewModel.Text = s.Substring(1);
             }
             else
             {
                 viewModel.Style = DiffContext.Context;
-                viewModel.PrefixForStyle = "  ";
+                viewModel.PrefixForStyle = "";
                 viewModel.Text = s.Length > 1 ? s.Substring(1) : s; // lol hax
             }
 

@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
+using ICSharpCode.AvalonEdit;
 
 namespace SideBySideDiffs
 {
@@ -17,7 +21,7 @@ namespace SideBySideDiffs
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // this is the format you can use to generate a "good enough" raw diff
-            // $ git difftool HEAD~1 -y -x "diff --old-line-format=\"- %L\" --new-line-format=\"+ %L\" --unchanged-line-format=\"  %L\"" > output.txt
+            // $ git show HEAD --format=%b | less > output.txt
 
             string diffContents = "";
 
@@ -31,49 +35,163 @@ namespace SideBySideDiffs
                 diffContents = streamReader.ReadToEnd();
             }
 
-            diffContents = diffContents.Replace("\r\r\n", "\r\n");
+            var allLines = diffContents.Split(new[] { "\n" }, StringSplitOptions.None).ToList();
 
-            var allLines = diffContents.Split(new[] { "\r\n" }, StringSplitOptions.None);
+            var arrayOfIndexes = Enumerable.Range(0, allLines.Count);
 
-            var leftPanelContents = allLines.Select(StripNewValues).ToArray();
-            var rightPanelContents = allLines.Select(StripOldValues).ToArray();
+            var diffSectionHeaders = allLines.Zip(arrayOfIndexes,
+                    (x, index) => new { Item = x, Index = index })
+                .Where(x => x.Item.StartsWith("diff --git a"))
+                .ToList();
 
-            var rowNumbersLeft = leftPanelContents.Scan(0,
-                (prev, s) => s != "" ? prev + 1 : prev);
+            foreach (var header in diffSectionHeaders)
+            {
+                var hunkElements = allLines
+                    .Skip(header.Index + 1)
+                    .TakeWhile(x => !x.StartsWith("diff --git a"))
+                    .ToList();
 
-            var leftPanel = leftPanelContents.Zip(rowNumbersLeft, (s, i) => new { Item = s, Index = i })
-                             .Select(x => DiffLineViewModel.Create(x.Index, x.Item))
-                             .ToList();
+                var chunks = ResolveDiffSections(hunkElements);
 
-            var rowNumbersRight = rightPanelContents.Scan(0,
-                (prev, s) => s != "" ? prev + 1 : prev);
+                foreach (var chunk in chunks)
+                {
+                    var row = chunks.IndexOf(chunk);
 
-            var rightPanel = rightPanelContents.Zip(rowNumbersRight, (s, i) => new { Item = s, Index = i })
-                         .Select(x => DiffLineViewModel.Create(x.Index, x.Item))
-                         .ToList();
+                    rootGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                    rootGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var leftMargin = new DiffInfoMargin { Lines = leftPanel };
-            left.TextArea.LeftMargins.Add(leftMargin);
-            var leftBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = leftPanel };
-            left.TextArea.TextView.BackgroundRenderers.Add(leftBackgroundRenderer);
+                    // draw header
+                    var textBlock = new TextBlock { Text = chunk.DiffSectionHeader };
+                    Grid.SetRow(textBlock, 2 * row);
+                    rootGrid.Children.Add(textBlock);
 
-            var rightMargin = new DiffInfoMargin { Lines = rightPanel };
-            right.TextArea.LeftMargins.Add(rightMargin);
+                    // draw left diff
+                    var leftMargin = new DiffInfoMargin { Lines = chunk.LeftDiff };
+                    var left = new TextEditor();
+                    left.TextArea.LeftMargins.Add(leftMargin);
+                    var leftBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = chunk.LeftDiff };
+                    left.TextArea.TextView.BackgroundRenderers.Add(leftBackgroundRenderer);
+                    left.Text = String.Join("\r\n", chunk.LeftDiff.Select(x => x.Text));
 
-            var rightBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = rightPanel };
-            right.TextArea.TextView.BackgroundRenderers.Add(rightBackgroundRenderer);
+                    Grid.SetRow(left, 2 * row + 1);
+                    rootGrid.Children.Add(left);
 
-            var leftText = String.Join("\r\n", leftPanel.Select(x => x.Text));
-            var rightText = String.Join("\r\n", rightPanel.Select(x => x.Text));
+                    // draw right diff
+                    var rightMargin = new DiffInfoMargin { Lines = chunk.RightDiff };
+                    var right = new TextEditor();
+                    right.TextArea.LeftMargins.Add(rightMargin);
+                    var rightBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = chunk.RightDiff };
+                    right.TextArea.TextView.BackgroundRenderers.Add(rightBackgroundRenderer);
+                    right.Text = String.Join("\r\n", chunk.RightDiff.Select(x => x.Text));
 
-            left.Text = leftText;
-            right.Text = rightText;
+                    Grid.SetRow(right, 2 * row + 1);
+                    Grid.SetColumn(right, 1);
+                    rootGrid.Children.Add(right);
+                }
+            }
 
-            // TODO: bind this to the page
-            // TODO: style this mofo
-            // TODO: parse the strings into proper domain objects
-            // TODO: introduce line highlighting
             // TODO: introduce highlighting specific sections
+        }
+
+        static List<DiffSectionViewModel> ResolveDiffSections(IEnumerable<string> hunkElements)
+        {
+            // TODO: extract file name
+            // TODO: track file name changes
+
+            var diffContents = hunkElements.Skip(3).ToList();
+            var sectionHeaders = diffContents.Where(x => x.StartsWith("@@ ")).ToList();
+
+            var regex = new Regex(@"\-(?<leftStart>\d{1,})\,(?<leftCount>\d{1,})\s\+(?<rightStart>\d{1,})\,(?<rightCount>\d{1,})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            var sections = new List<DiffSectionViewModel>();
+
+            foreach (var header in sectionHeaders)
+            {
+                var lineNumbers = regex.Match(header);
+                var startIndex = diffContents.IndexOf(header);
+                var innerDiffContents = diffContents.Skip(startIndex + 1).ToList();
+
+                var leftStart = int.Parse(lineNumbers.Groups["leftStart"].Value);
+                var leftDiffSize = int.Parse(lineNumbers.Groups["leftCount"].Value);
+                var rightStart = int.Parse(lineNumbers.Groups["rightStart"].Value);
+                var rightDiffSize = int.Parse(lineNumbers.Groups["rightCount"].Value);
+
+                var leftLineNumbers = Enumerable.Range(leftStart, leftDiffSize);
+
+                var section = new DiffSectionViewModel();
+                section.DiffSectionHeader = header;
+
+                // left section - all context + deletes
+
+                section.LeftDiff = innerDiffContents
+                    .Where(x => !x.StartsWith("+"))
+                    .Zip(leftLineNumbers, (x, line) => new { Item = x, LineNumber = line })
+                    .Select(x => DiffLineViewModel.Create(x.LineNumber, x.Item))
+                    .ToList();
+
+                // right section - all context + adds
+
+                var rightLineNumbers = Enumerable.Range(rightStart, rightDiffSize);
+
+                section.RightDiff = innerDiffContents
+                    .Where(x => !x.StartsWith("-"))
+                    .Zip(rightLineNumbers, (x, line) => new { Item = x, LineNumber = line })
+                    .Select(x => DiffLineViewModel.Create(x.LineNumber, x.Item))
+                    .ToList();
+
+                sections.Add(section);
+
+            }
+
+            return sections;
+
+            //            @@ -247,24 +247,7 @@ public Task<IResponse<T>> Put<T>(Uri uri, object body, string twoFactorAuthentic
+            //                 Timeout = timeout
+            //             };
+
+            //-            if (!String.IsNullOrEmpty(accepts))
+            //-            {
+            //-                request.Headers["Accept"] = accepts;
+            //-            }
+            //-
+            //-            if (!String.IsNullOrEmpty(twoFactorAuthenticationCode))
+            //-            {
+            //-                request.Headers["X-GitHub-OTP"] = twoFactorAuthenticationCode;
+            //-            }
+            //-
+            //-            if (body != null)
+            //-            {
+            //-                request.Body = body;
+            //-                // Default Content Type per: http://developer.github.com/v3/
+            //-                request.ContentType = contentType ?? "application/x-www-form-urlencoded";
+            //-            }
+            //-
+            //-            return Run<T>(request, cancellationToken);
+            //+            return SendDataInternal<T>(body, accepts, contentType, cancellationToken, twoFactorAuthenticationCode, request);
+            //         }
+
+            //         Task<IResponse<T>> SendData<T>(
+            //@@ -286,6 +269,11 @@ public Task<IResponse<T>> Put<T>(Uri uri, object body, string twoFactorAuthentic
+            //                 Endpoint = uri,
+            //             };
+
+            //+            return SendDataInternal<T>(body, accepts, contentType, cancellationToken, twoFactorAuthenticationCode, request);
+            //+        }
+            //+
+            //+        Task SendDataInternal<T>(object body, string accepts, string contentType, CancellationToken cancellationToken, string twoFactorAuthenticationCode, Request request)
+            //+        {
+            //             if (!String.IsNullOrEmpty(accepts))
+            //             {
+            //                 request.Headers["Accept"] = accepts;
+            //@@ -303,7 +291,7 @@ public Task<IResponse<T>> Put<T>(Uri uri, object body, string twoFactorAuthentic
+            //                 request.ContentType = contentType ?? "application/x-www-form-urlencoded";
+            //             }
+
+            //-            return Run<T>(request,cancellationToken);
+            //+            return Run<T>(request, cancellationToken);
+            //         }
+
+            //         /// <summary>
         }
 
         static string StripOldValues(string s)
