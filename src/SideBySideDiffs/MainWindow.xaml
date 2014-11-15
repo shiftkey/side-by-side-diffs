@@ -16,11 +16,17 @@
                             BorderThickness="{TemplateBinding BorderThickness}" />
         </ControlTemplate>
 
+        <Style x:Key="ContextHeaderStyle" TargetType="TextBlock">
+            <Setter Property="Background" Value="#F8FAFD"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="10pt"/>
+            <Setter Property="Foreground" Value="#4C000000"/>
+        </Style>
+        
         <Style TargetType="avalonedit:TextEditor">
             <Setter Property="FontFamily" Value="Consolas" />
             <Setter Property="FontSize" Value="10pt"/>
             <Setter Property="WordWrap" Value="True"/>
-            <Setter Property="Margin" Value="0,0,0,-15"/>
             <Setter Property="IsReadOnly" Value="True"/>
             <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>

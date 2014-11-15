@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ICSharpCode.AvalonEdit;
 
 namespace SideBySideDiffs
@@ -24,7 +25,7 @@ namespace SideBySideDiffs
             // $ git show HEAD --format=%b | less > output.txt
 
             string diffContents = "";
-
+            var converter = new FontSizeConverter();
             var names = Assembly.GetExecutingAssembly().GetManifestResourceNames();
 
             var outputResourceKey = names.First(x => x.EndsWith("output.txt"));
@@ -61,8 +62,13 @@ namespace SideBySideDiffs
                     rootGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
                     // draw header
-                    var textBlock = new TextBlock { Text = chunk.DiffSectionHeader };
+                    var textBlock = new TextBlock
+                    {
+                        Text = chunk.DiffSectionHeader,
+                        Style = (Style)this.FindResource("ContextHeaderStyle")
+                    };
                     Grid.SetRow(textBlock, 2 * row);
+                    Grid.SetColumnSpan(textBlock, 2);
                     rootGrid.Children.Add(textBlock);
 
                     // draw left diff
