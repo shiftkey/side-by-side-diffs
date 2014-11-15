@@ -13,14 +13,33 @@ namespace SideBySideDiffs
 {
     public class DiffInfoMargin : AbstractMargin
     {
+        static readonly Brush AddedBackground;
+        static readonly Brush DeletedBackground;
+
         static readonly SolidColorBrush BackBrush;
-        static SolidColorBrush ForegroundBrush;
+        static readonly SolidColorBrush ForegroundBrush;
+
+        static readonly Pen BorderlessPen;
+
         const double TextHorizontalMargin = 4.0;
 
         FormattedText _lineFt, _plusMinusFt;
  
         static DiffInfoMargin()
         {
+            AddedBackground = new SolidColorBrush(Color.FromRgb(0xdd, 0xff, 0xdd));
+            AddedBackground.Freeze();
+
+            DeletedBackground = new SolidColorBrush(Color.FromRgb(0xff, 0xdd, 0xdd));
+            DeletedBackground.Freeze();
+
+            var transparentBrush = new SolidColorBrush(Colors.Transparent);
+            transparentBrush.Freeze();
+
+            BorderlessPen = new Pen(transparentBrush, 0.0);
+            BorderlessPen.Freeze();
+
+
             BackBrush = new SolidColorBrush(Color.FromRgb(255, 0, 255));
             BackBrush.Freeze();
 
@@ -77,13 +96,32 @@ namespace SideBySideDiffs
 
                 FormattedText ft;
 
+                if (diffLine.Style != DiffContext.Context)
+                {
+                    var brush = default(Brush);
+                    switch (diffLine.Style)
+                    {
+                        case DiffContext.Added:
+                            brush = AddedBackground;
+                            break;
+                        case DiffContext.Deleted:
+                            brush = DeletedBackground;
+                            break;
+                    }
+
+                    foreach (var rc in rcs)
+                    {
+                        drawingContext.DrawRectangle(brush, BorderlessPen, new Rect(0, rc.Top, ActualWidth, rc.Height));
+                    }
+                }
+
                 if (diffLine.Text != "")
                 {
                     ft = new FormattedText(diffLine.RowNumber.ToString(),
                         CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                         tf, fontSize, ForegroundBrush);
 
-                    var left = 0;
+                    var left = TextHorizontalMargin;
 
                     drawingContext.DrawText(ft, new Point(left, rcs[0].Top));
                 }
