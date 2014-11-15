@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Contexts;
 using System.Windows;
 using System.Windows.Controls;
 using ICSharpCode.AvalonEdit;
@@ -40,6 +41,16 @@ namespace SideBySideDiffs
             var leftPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("- ")).ToArray();
             var rightPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("+ ")).ToArray();
 
+            var leftPanel = leftPanelContents.Select(x => new {Item = x, Index = Array.IndexOf(leftPanelContents, x)})
+                             .Select(x => CreateRowModel(x.Index, x.Item))
+                             .ToList();
+
+            var rightPanel = rightPanelContents.Select(x => new { Item = x, Index = Array.IndexOf(leftPanelContents, x) })
+                         .Select(x => CreateRowModel(x.Index, x.Item))
+                         .ToList();
+
+
+
             var leftText = String.Join("\r\n", leftPanelContents);
             var rightText = String.Join("\r\n", rightPanelContents);
 
@@ -55,5 +66,34 @@ namespace SideBySideDiffs
             // TODO: introduce line highlighting
             // TODO: introduce highlighting specific sections
         }
+
+        static DiffLineViewModel CreateRowModel(int index, string s)
+        {
+            var viewModel = new DiffLineViewModel();
+            viewModel.RowNumber = index;
+            viewModel.Text = s;
+            viewModel.Context = s.StartsWith("+ ")
+                ? DiffContext.Add
+                : s.StartsWith("- ")
+                    ? DiffContext.Remove
+                    : DiffContext.Context;
+
+            return viewModel;
+        }
+    }
+
+    internal enum DiffContext
+    {
+        Add,
+        Remove,
+        Context
+    }
+
+    internal class DiffLineViewModel
+
+    {
+        public string Text { get; set; }
+        public DiffContext Context { get; set; }
+        public int RowNumber { get; set; }
     }
 }
