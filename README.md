@@ -10,4 +10,6 @@ Given a diff, the app breaks it up into the specific components and applies the 
 
 ## What's Not Working?
 
-Currently it's tied to a specific diff for a single - there's probably some edge cases not in place. I'd like to also support multiple files so you get to see a diff for the entire changeset.
+  - word wrapping on one side breaks the other diff - how can we keep thsoe in sync?
+  - tied to a specific diff - probably some :poop: edge cases
+  - it should render a list of files - make it more generic/flexible
