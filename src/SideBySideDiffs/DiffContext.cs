@@ -2,8 +2,8 @@
 {
     public enum DiffContext
     {
-        Add,
-        Remove,
+        Added,
+        Deleted,
         Context
     }
 }

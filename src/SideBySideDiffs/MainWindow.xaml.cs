@@ -49,15 +49,19 @@ namespace SideBySideDiffs
                          .Select(x => CreateRowModel(x.Index, x.Item))
                          .ToList();
 
-
             var leftMargin = new DiffInfoMargin { Lines = leftPanel };
             left.TextArea.LeftMargins.Add(leftMargin);
+            var leftBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = leftPanel };
+            left.TextArea.TextView.BackgroundRenderers.Add(leftBackgroundRenderer);
 
             var rightMargin = new DiffInfoMargin { Lines = rightPanel };
             right.TextArea.LeftMargins.Add(rightMargin);
 
-            var leftText = String.Join("\r\n", leftPanelContents);
-            var rightText = String.Join("\r\n", rightPanelContents);
+            var rightBackgroundRenderer = new DiffLineBackgroundRenderer { Lines = rightPanel };
+            right.TextArea.TextView.BackgroundRenderers.Add(rightBackgroundRenderer);
+
+            var leftText = String.Join("\r\n", leftPanel.Select(x => x.Text));
+            var rightText = String.Join("\r\n", rightPanel.Select(x => x.Text));
 
             left.Text = leftText;
             right.Text = rightText;
@@ -92,19 +96,19 @@ namespace SideBySideDiffs
 
             if (s.StartsWith("+ "))
             {
-                viewModel.Context = DiffContext.Add;
+                viewModel.Style = DiffContext.Added;
                 viewModel.PrefixForStyle = "+ ";
                 viewModel.Text = s.Substring(2);
             }
             else if (s.StartsWith("- "))
             {
-                viewModel.Context = DiffContext.Remove;
+                viewModel.Style = DiffContext.Deleted;
                 viewModel.PrefixForStyle = "- ";
                 viewModel.Text = s.Substring(2);
             }
             else
             {
-                viewModel.Context = DiffContext.Context;
+                viewModel.Style = DiffContext.Context;
                 viewModel.PrefixForStyle = "";
                 viewModel.Text = s;
             }
