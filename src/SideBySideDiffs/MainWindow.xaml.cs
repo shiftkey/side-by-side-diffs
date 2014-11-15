@@ -148,8 +148,9 @@ namespace SideBySideDiffs
 
                 if (section.LeftDiff.Count > section.RightDiff.Count)
                 {
-                    var lastAdd = section.RightDiff.Last(x => x.Style == DiffContext.Added);
-                    var lastIndex = section.RightDiff.IndexOf(lastAdd);
+                    var lastAdd = section.RightDiff.LastOrDefault(x => x.Style == DiffContext.Added);
+                    // magic number 3 here is the number of context rows
+                    var lastIndex = lastAdd == null ? 2 : section.RightDiff.IndexOf(lastAdd);
                     for (int i = 0; i < missingRowCount; i++)
                     {
                         var missing = new DiffLineViewModel();
@@ -161,7 +162,17 @@ namespace SideBySideDiffs
                 }
                 else
                 {
-                    // TODO: fill in some extra empty rows in the left diff
+                    var lastRemove = section.LeftDiff.LastOrDefault(x => x.Style == DiffContext.Deleted);
+                    // magic number 3 here is the number of context rows
+                    var lastIndex = lastRemove == null ? 2 : section.LeftDiff.IndexOf(lastRemove);
+                    for (int i = 0; i < missingRowCount; i++)
+                    {
+                        var missing = new DiffLineViewModel();
+                        missing.Style = DiffContext.Blank;
+                        missing.Text = "";
+                        missing.PrefixForStyle = "";
+                        section.LeftDiff.Insert(lastIndex + 1, missing);
+                    }
                 }
 
 
