@@ -6,10 +6,10 @@ namespace SideBySideDiffs
     {
         public string Text { get; set; }
         public DiffContext Style { get; set; }
-        public int LineNumber { get; set; }
+        public string LineNumber { get; set; }
         public string PrefixForStyle { get; set; }
 
-        public static DiffLineViewModel Create(int lineNumber, string s)
+        public static DiffLineViewModel Create(string lineNumber, string s)
         {
             var viewModel = new DiffLineViewModel();
             viewModel.LineNumber = lineNumber;
@@ -35,7 +35,6 @@ namespace SideBySideDiffs
 
             return viewModel;
         }
-
 
         public override string ToString()
         {

@@ -4,6 +4,7 @@
     {
         Added,
         Deleted,
-        Context
+        Context,
+        Blank
     }
 }

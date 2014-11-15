@@ -15,6 +15,7 @@ namespace SideBySideDiffs
     {
         static readonly Brush AddedBackground;
         static readonly Brush DeletedBackground;
+        static readonly Brush BlankBackground;
 
         static readonly SolidColorBrush BackBrush;
         static readonly SolidColorBrush ForegroundBrush;
@@ -33,12 +34,14 @@ namespace SideBySideDiffs
             DeletedBackground = new SolidColorBrush(Color.FromRgb(0xff, 0xdd, 0xdd));
             DeletedBackground.Freeze();
 
+            BlankBackground = new SolidColorBrush(Color.FromRgb(0xfa, 0xfa, 0xfa));
+            BlankBackground.Freeze();
+
             var transparentBrush = new SolidColorBrush(Colors.Transparent);
             transparentBrush.Freeze();
 
             BorderlessPen = new Pen(transparentBrush, 0.0);
             BorderlessPen.Freeze();
-
 
             BackBrush = new SolidColorBrush(Color.FromRgb(255, 0, 255));
             BackBrush.Freeze();
@@ -107,6 +110,9 @@ namespace SideBySideDiffs
                         case DiffContext.Deleted:
                             brush = DeletedBackground;
                             break;
+                        case DiffContext.Blank:
+                            brush = BlankBackground;
+                            break;
                     }
 
                     foreach (var rc in rcs)
@@ -117,7 +123,7 @@ namespace SideBySideDiffs
 
                 if (diffLine.Text != "")
                 {
-                    ft = new FormattedText(diffLine.LineNumber.ToString(),
+                    ft = new FormattedText(diffLine.LineNumber,
                         CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                         tf, fontSize, ForegroundBrush);
 

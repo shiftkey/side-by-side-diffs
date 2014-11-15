@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using ICSharpCode.AvalonEdit;
 
 namespace SideBySideDiffs
@@ -24,8 +24,7 @@ namespace SideBySideDiffs
             // this is the format you can use to generate a "good enough" raw diff
             // $ git show HEAD --format=%b | less > output.txt
 
-            string diffContents = "";
-            var converter = new FontSizeConverter();
+            string diffContents;
             var names = Assembly.GetExecutingAssembly().GetManifestResourceNames();
 
             var outputResourceKey = names.First(x => x.EndsWith("output.txt"));
@@ -65,7 +64,7 @@ namespace SideBySideDiffs
                     var textBlock = new TextBlock
                     {
                         Text = chunk.DiffSectionHeader,
-                        Style = (Style)this.FindResource("ContextHeaderStyle")
+                        Style = (Style)FindResource("ContextHeaderStyle")
                     };
                     Grid.SetRow(textBlock, 2 * row);
                     Grid.SetColumnSpan(textBlock, 2);
@@ -122,13 +121,13 @@ namespace SideBySideDiffs
                 var rightStart = int.Parse(lineNumbers.Groups["rightStart"].Value);
                 var rightDiffSize = int.Parse(lineNumbers.Groups["rightCount"].Value);
 
-                var leftLineNumbers = Enumerable.Range(leftStart, leftDiffSize);
+                var leftLineNumbers = Enumerable.Range(leftStart, leftDiffSize)
+                    .Select(x => x.ToString(CultureInfo.InvariantCulture));
 
                 var section = new DiffSectionViewModel();
                 section.DiffSectionHeader = header;
 
                 // left section - all context + deletes
-
                 section.LeftDiff = innerDiffContents
                     .Where(x => !x.StartsWith("+"))
                     .Zip(leftLineNumbers, (x, line) => new { Item = x, LineNumber = line })
@@ -136,14 +135,36 @@ namespace SideBySideDiffs
                     .ToList();
 
                 // right section - all context + adds
-
-                var rightLineNumbers = Enumerable.Range(rightStart, rightDiffSize);
+                var rightLineNumbers = Enumerable.Range(rightStart, rightDiffSize)
+                    .Select(x => x.ToString(CultureInfo.InvariantCulture));
 
                 section.RightDiff = innerDiffContents
                     .Where(x => !x.StartsWith("-"))
                     .Zip(rightLineNumbers, (x, line) => new { Item = x, LineNumber = line })
                     .Select(x => DiffLineViewModel.Create(x.LineNumber, x.Item))
                     .ToList();
+
+                var missingRowCount = Math.Abs(section.LeftDiff.Count - section.RightDiff.Count);
+
+                if (section.LeftDiff.Count > section.RightDiff.Count)
+                {
+                    var lastAdd = section.RightDiff.Last(x => x.Style == DiffContext.Added);
+                    var lastIndex = section.RightDiff.IndexOf(lastAdd);
+                    for (int i = 0; i < missingRowCount; i++)
+                    {
+                        var missing = new DiffLineViewModel();
+                        missing.Style = DiffContext.Blank;
+                        missing.Text = "";
+                        missing.PrefixForStyle = "";
+                        section.RightDiff.Insert(lastIndex + 1, missing);
+                    }
+                }
+                else
+                {
+                    // TODO: fill in some extra empty rows in the left diff
+                }
+
+
 
                 sections.Add(section);
 

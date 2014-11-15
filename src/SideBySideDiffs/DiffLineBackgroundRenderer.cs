@@ -9,6 +9,8 @@ namespace SideBySideDiffs
     {
         static readonly Brush AddedBackground;
         static readonly Brush DeletedBackground;
+        static readonly Brush BlankBackground;
+
         static readonly Pen BorderlessPen;
 
         static DiffLineBackgroundRenderer()
@@ -18,6 +20,9 @@ namespace SideBySideDiffs
 
             DeletedBackground = new SolidColorBrush(Color.FromRgb(0xff, 0xdd, 0xdd));
             DeletedBackground.Freeze();
+
+            BlankBackground = new SolidColorBrush(Color.FromRgb(0xfa, 0xfa, 0xfa));
+            BlankBackground.Freeze();
 
             var transparentBrush = new SolidColorBrush(Colors.Transparent);
             transparentBrush.Freeze();
@@ -47,6 +52,9 @@ namespace SideBySideDiffs
                         break;
                     case DiffContext.Deleted:
                         brush = DeletedBackground;
+                        break;
+                    case DiffContext.Blank:
+                        brush = BlankBackground;
                         break;
                 }
 
