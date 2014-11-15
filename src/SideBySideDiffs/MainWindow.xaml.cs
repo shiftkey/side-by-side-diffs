@@ -38,14 +38,16 @@ namespace SideBySideDiffs
 
             var allLines = diffContents.Split(new[] { "\r\n" }, StringSplitOptions.None);
 
-            var leftPanelContents = allLines.Select(x => StripNewValues(x)).ToArray();
-            var rightPanelContents = allLines.Select(x => StripOldValues(x)).ToArray();
+            var leftPanelContents = allLines.Select(StripNewValues).ToArray();
+            var rightPanelContents = allLines.Select(StripOldValues).ToArray();
 
-            var leftPanel = leftPanelContents.Select(x => new { Item = x, Index = Array.IndexOf(leftPanelContents, x) })
+            var rowNumbers = Enumerable.Range(1, allLines.Length).ToArray();
+
+            var leftPanel = leftPanelContents.Zip(rowNumbers, (s, i) => new {Item = s, Index = i})
                              .Select(x => CreateRowModel(x.Index, x.Item))
                              .ToList();
 
-            var rightPanel = rightPanelContents.Select(x => new { Item = x, Index = Array.IndexOf(leftPanelContents, x) })
+            var rightPanel = rightPanelContents.Zip(rowNumbers, (s, i) => new {Item = s, Index = i})
                          .Select(x => CreateRowModel(x.Index, x.Item))
                          .ToList();
 
@@ -109,8 +111,8 @@ namespace SideBySideDiffs
             else
             {
                 viewModel.Style = DiffContext.Context;
-                viewModel.PrefixForStyle = "";
-                viewModel.Text = s;
+                viewModel.PrefixForStyle = "  ";
+                viewModel.Text = s.Length > 1 ? s.Substring(1) : s; // lol hax
             }
 
             return viewModel;
