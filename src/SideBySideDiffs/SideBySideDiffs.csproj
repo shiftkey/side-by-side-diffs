@@ -64,6 +64,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DiffContext.cs" />
+    <Compile Include="DiffInfoMargin.cs" />
+    <Compile Include="DiffLineBackgroundRenderer.cs" />
+    <Compile Include="DiffLineViewModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

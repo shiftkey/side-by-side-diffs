@@ -36,12 +36,12 @@ namespace SideBySideDiffs
 
             diffContents = diffContents.Replace("\r\r\n", "\r\n");
 
-            var allLines = diffContents.Split(new[] {"\r\n"}, StringSplitOptions.None);
+            var allLines = diffContents.Split(new[] { "\r\n" }, StringSplitOptions.None);
 
             var leftPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("- ")).ToArray();
             var rightPanelContents = allLines.Where(x => x.StartsWith(" ") || x.StartsWith("+ ")).ToArray();
 
-            var leftPanel = leftPanelContents.Select(x => new {Item = x, Index = Array.IndexOf(leftPanelContents, x)})
+            var leftPanel = leftPanelContents.Select(x => new { Item = x, Index = Array.IndexOf(leftPanelContents, x) })
                              .Select(x => CreateRowModel(x.Index, x.Item))
                              .ToList();
 
@@ -49,6 +49,12 @@ namespace SideBySideDiffs
                          .Select(x => CreateRowModel(x.Index, x.Item))
                          .ToList();
 
+
+            var leftMargin = new DiffInfoMargin { Lines = leftPanel };
+            left.TextArea.LeftMargins.Add(leftMargin);
+
+            var rightMargin = new DiffInfoMargin { Lines = rightPanel };
+            right.TextArea.LeftMargins.Add(rightMargin);
 
 
             var leftText = String.Join("\r\n", leftPanelContents);
@@ -80,20 +86,5 @@ namespace SideBySideDiffs
 
             return viewModel;
         }
-    }
-
-    internal enum DiffContext
-    {
-        Add,
-        Remove,
-        Context
-    }
-
-    internal class DiffLineViewModel
-
-    {
-        public string Text { get; set; }
-        public DiffContext Context { get; set; }
-        public int RowNumber { get; set; }
     }
 }
