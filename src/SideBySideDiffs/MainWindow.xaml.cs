@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Contexts;
 using System.Windows;
-using System.Windows.Controls;
-using ICSharpCode.AvalonEdit;
 
 namespace SideBySideDiffs
 {
@@ -46,14 +42,14 @@ namespace SideBySideDiffs
                 (prev, s) => s != "" ? prev + 1 : prev);
 
             var leftPanel = leftPanelContents.Zip(rowNumbersLeft, (s, i) => new { Item = s, Index = i })
-                             .Select(x => CreateRowModel(x.Index, x.Item))
+                             .Select(x => DiffLineViewModel.Create(x.Index, x.Item))
                              .ToList();
 
             var rowNumbersRight = rightPanelContents.Scan(0,
                 (prev, s) => s != "" ? prev + 1 : prev);
 
             var rightPanel = rightPanelContents.Zip(rowNumbersRight, (s, i) => new { Item = s, Index = i })
-                         .Select(x => CreateRowModel(x.Index, x.Item))
+                         .Select(x => DiffLineViewModel.Create(x.Index, x.Item))
                          .ToList();
 
             var leftMargin = new DiffInfoMargin { Lines = leftPanel };
@@ -94,48 +90,6 @@ namespace SideBySideDiffs
                 return "";
 
             return s;
-        }
-
-        static DiffLineViewModel CreateRowModel(int index, string s)
-        {
-            var viewModel = new DiffLineViewModel();
-            viewModel.RowNumber = index;
-
-            if (s.StartsWith("+ "))
-            {
-                viewModel.Style = DiffContext.Added;
-                viewModel.PrefixForStyle = "+ ";
-                viewModel.Text = s.Substring(2);
-            }
-            else if (s.StartsWith("- "))
-            {
-                viewModel.Style = DiffContext.Deleted;
-                viewModel.PrefixForStyle = "- ";
-                viewModel.Text = s.Substring(2);
-            }
-            else
-            {
-                viewModel.Style = DiffContext.Context;
-                viewModel.PrefixForStyle = "  ";
-                viewModel.Text = s.Length > 1 ? s.Substring(1) : s; // lol hax
-            }
-
-            return viewModel;
-        }
-    }
-
-    public static class LinqExtensions
-    {
-        // http://stackoverflow.com/a/7403212/1363815
-        public static IEnumerable<TAccumulate> Scan<TSource, TAccumulate>(this IEnumerable<TSource> source,
-            TAccumulate seed, Func<TAccumulate, TSource, TAccumulate> accumulator)
-        {
-
-            foreach (var item in source)
-            {
-                seed = accumulator(seed, item);
-                yield return seed;
-            }
         }
 
     }

@@ -51,7 +51,7 @@ namespace SideBySideDiffs
         {
             if (Lines == null || Lines.Count == 0) return new Size(0.0, 0.0);
 
-            var textToUse = Lines.Last().RowNumber.ToString();
+            var textToUse = Lines.Last().LineNumber.ToString();
 
             var tf = CreateTypeface();
             _lineFt = new FormattedText(
@@ -117,7 +117,7 @@ namespace SideBySideDiffs
 
                 if (diffLine.Text != "")
                 {
-                    ft = new FormattedText(diffLine.RowNumber.ToString(),
+                    ft = new FormattedText(diffLine.LineNumber.ToString(),
                         CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                         tf, fontSize, ForegroundBrush);
 
